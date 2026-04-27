@@ -1,3 +1,5 @@
+Read [](file:///c%3A/Users/Dell/OneDrive/Desktop/TaskFLow/index.php#1-1), lines 1 to 100
+
 <?php
 include 'db.php';
 
@@ -12,31 +14,25 @@ if (isset($_POST['add'])) {
     }
 }
 
-// Mark Complete
+// Complete
 if (isset($_GET['complete'])) {
-    $id = intval($_GET['complete']);
-    $conn->query("UPDATE tasks SET status=1 WHERE id=$id");
+    $conn->query("UPDATE tasks SET status=1 WHERE id=" . intval($_GET['complete']));
 }
 
-// Delete Task
+// Delete
 if (isset($_GET['delete'])) {
-    $id = intval($_GET['delete']);
-    $conn->query("DELETE FROM tasks WHERE id=$id");
+    $conn->query("DELETE FROM tasks WHERE id=" . intval($_GET['delete']));
 }
 
-// Get all tasks - SINGLE QUERY ONLY
 $result = $conn->query("SELECT * FROM tasks ORDER BY created_at DESC");
 
-// Calculate stats from result
 $total = $result->num_rows;
 $completed = 0;
-$tasks_data = array();
+$tasks_data = [];
 
-while($row = $result->fetch_assoc()) {
+while($row = $result->fetch_assoc()){
     $tasks_data[] = $row;
-    if($row['status'] == 1) {
-        $completed++;
-    }
+    if($row['status']==1) $completed++;
 }
 $pending = $total - $completed;
 ?>
@@ -46,9 +42,9 @@ $pending = $total - $completed;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow - Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>🚀 TaskFlow - Productivity Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -57,35 +53,63 @@ $pending = $total - $completed;
         }
         
         body {
-            background: #0f172a;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             color: #e2e8f0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 25px 50px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .navbar-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .navbar-logo {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .navbar-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .sidebar {
             position: fixed;
             left: 0;
-            top: 0;
-            width: 260px;
-            height: 100vh;
-            background: #1e293b;
-            border-right: 1px solid #334155;
-            padding: 30px 0;
+            top: 90px;
+            width: 300px;
+            height: calc(100vh - 90px);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 50px 0;
             z-index: 1000;
-        }
-        
-        .sidebar-logo {
-            padding: 0 20px 30px;
-            border-bottom: 1px solid #334155;
-            margin-bottom: 20px;
-        }
-        
-        .sidebar-logo h2 {
-            font-size: 24px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            box-shadow: 4px 0 32px rgba(0, 0, 0, 0.2);
         }
         
         .sidebar-menu {
@@ -93,170 +117,332 @@ $pending = $total - $completed;
         }
         
         .sidebar-menu li {
-            padding: 12px 20px;
-            margin: 5px 10px;
-            border-radius: 8px;
+            padding: 18px 30px;
+            margin: 10px 20px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            position: relative;
+            font-size: 16px;
         }
         
         .sidebar-menu li.active {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            transform: translateX(8px);
         }
         
         .sidebar-menu li:hover {
-            background: #334155;
+            background: rgba(59, 130, 246, 0.15);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-menu li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 0;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+            transition: height 0.3s;
+        }
+        
+        .sidebar-menu li.active::before {
+            height: 100%;
         }
         
         .main-content {
-            margin-left: 260px;
-            padding: 40px;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-        
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
+            margin-left: 300px;
+            margin-top: 90px;
+            padding: 60px;
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
         }
         
         .stat-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 25px;
-            transition: all 0.3s;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 35px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            border-radius: 20px 20px 0 0;
         }
         
         .stat-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            opacity: 0.9;
         }
         
         .stat-label {
-            font-size: 14px;
+            font-size: 16px;
             color: #94a3b8;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #3b82f6;
-        }
-        
-        .task-input-section {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 40px;
-        }
-        
-        .task-input-section h3 {
-            margin-bottom: 20px;
-            font-size: 18px;
+            letter-spacing: 1.5px;
             font-weight: 600;
         }
         
-        .form-group {
-            margin-bottom: 15px;
+        .stat-value {
+            font-size: 56px;
+            font-weight: 800;
+            color: #3b82f6;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+        }
+        
+        .weekly-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 60px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .weekly-section h3 {
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #3b82f6;
+        }
+        
+        .weekly-section h3::before {
+            content: '📅';
+            font-size: 28px;
+        }
+        
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .day-checkbox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        
+        .day-checkbox:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+        }
+        
+        .day-checkbox input[type="checkbox"] {
+            width: 28px;
+            height: 28px;
+            accent-color: #3b82f6;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        
+        .day-label {
+            font-size: 16px;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .progress-container {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(51, 65, 85, 0.6);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 18px;
+            color: #cbd5e1;
+            font-weight: 700;
+        }
+        
+        .task-input-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 60px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .task-input-section h3 {
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #3b82f6;
+        }
+        
+        .task-input-section h3::before {
+            content: '✨';
+            font-size: 28px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 25px;
+            align-items: flex-end;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 12px;
+            font-size: 16px;
             color: #cbd5e1;
+            font-weight: 600;
         }
         
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 10px 15px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
             color: #e2e8f0;
-            font-size: 14px;
-            transition: all 0.3s;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
         
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 15px;
-            align-items: flex-end;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+            transform: translateY(-2px);
         }
         
         .btn-add {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
             color: white;
-            padding: 10px 25px;
+            padding: 15px 35px;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s;
-            height: 40px;
+            transition: all 0.3s ease;
+            height: 50px;
+            font-size: 16px;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .btn-add:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(59, 130, 246, 0.6);
         }
         
         .content-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 30px;
+            gap: 40px;
         }
         
         .tasks-section {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
             overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
         
         .section-header {
-            padding: 20px 25px;
-            border-bottom: 1px solid #334155;
-            font-size: 18px;
-            font-weight: 600;
+            padding: 30px 35px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #3b82f6;
+        }
+        
+        .section-header::before {
+            content: '📋';
+            font-size: 26px;
         }
         
         .empty-state {
-            padding: 40px;
+            padding: 60px;
             text-align: center;
             color: #64748b;
         }
         
         .empty-state p {
-            font-size: 16px;
+            font-size: 20px;
             margin: 0;
+            font-weight: 600;
         }
         
         .tasks-table {
@@ -265,111 +451,177 @@ $pending = $total - $completed;
         }
         
         .tasks-table thead {
-            background: #0f172a;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
         }
         
         .tasks-table th {
-            padding: 15px 20px;
+            padding: 20px 30px;
             text-align: left;
-            font-size: 12px;
+            font-size: 14px;
             color: #94a3b8;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid #334155;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            font-weight: 700;
         }
         
         .tasks-table td {
-            padding: 15px 20px;
-            border-bottom: 1px solid #334155;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
         }
         
         .tasks-table tr:hover {
-            background: #0f172a;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+        }
+        
+        .tasks-table tr.completed {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1));
+            border-left: 4px solid #22c55e;
         }
         
         .priority-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
             text-transform: uppercase;
+            border: 2px solid;
         }
         
         .priority-High {
-            background: rgba(239, 68, 68, 0.2);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
             color: #fca5a5;
+            border-color: #ef4444;
         }
         
         .priority-Medium {
-            background: rgba(251, 146, 60, 0.2);
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(234, 88, 12, 0.2));
             color: #fdba74;
+            border-color: #fb923c;
         }
         
         .priority-Low {
-            background: rgba(34, 197, 94, 0.2);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2));
             color: #86efac;
+            border-color: #22c55e;
         }
         
         .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid;
         }
         
         .status-done {
-            background: rgba(34, 197, 94, 0.2);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2));
             color: #86efac;
+            border-color: #22c55e;
         }
         
         .status-pending {
-            background: rgba(168, 85, 247, 0.2);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(147, 51, 234, 0.2));
             color: #d8b4fe;
+            border-color: #a855f7;
         }
         
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 12px;
         }
         
         .btn-action {
-            background: none;
-            border: none;
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.6), rgba(30, 41, 59, 0.6));
+            border: 1px solid rgba(59, 130, 246, 0.2);
             color: #64748b;
             cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: all 0.3s;
+            padding: 10px 16px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
         }
         
         .btn-action:hover {
             color: #e2e8f0;
-            background: #334155;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
         }
         
-        .chart-section {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 25px;
+        .analytics-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 35px;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
         
         .chart-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #3b82f6;
+        }
+        
+        .chart-title::before {
+            content: '📊';
+            font-size: 26px;
         }
         
         .chart-container {
             position: relative;
-            height: 250px;
+            height: 300px;
+            margin-bottom: 30px;
+        }
+        
+        .analytics-progress {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(30, 41, 59, 0.6));
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        
+        .analytics-progress .progress-bar {
+            width: 100%;
+            height: 14px;
+            background: rgba(51, 65, 85, 0.6);
+            border-radius: 7px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .analytics-progress .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            width: <?php echo $total > 0 ? round(($completed / $total) * 100) : 0; ?>%;
+            border-radius: 7px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+        }
+        
+        .analytics-progress .progress-text {
+            text-align: center;
+            font-size: 18px;
+            color: #cbd5e1;
+            font-weight: 700;
         }
         
         @media (max-width: 1200px) {
@@ -394,55 +646,118 @@ $pending = $total - $completed;
             .form-row {
                 grid-template-columns: 1fr;
             }
+            
+            .weekly-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .navbar-logo {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="sidebar-logo">
-            <h2>📋 TaskFlow</h2>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-logo">🚀 TaskFlow</div>
+            <div class="navbar-subtitle">Productivity Dashboard</div>
         </div>
+    </nav>
+
+    <div class="sidebar">
         <ul class="sidebar-menu">
             <li class="active">📊 Dashboard</li>
             <li>✓ Tasks</li>
             <li>📈 Analytics</li>
+            <li>⚙️ Settings</li>
         </ul>
     </div>
 
     <div class="main-content">
-        <div class="header">
-            <h1>Welcome Back</h1>
-        </div>
-
         <div class="stats-grid">
             <div class="stat-card">
+                <div class="stat-icon">📈</div>
                 <div class="stat-label">Total Tasks</div>
                 <div class="stat-value"><?php echo $total; ?></div>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">✅</div>
                 <div class="stat-label">Completed</div>
                 <div class="stat-value"><?php echo $completed; ?></div>
             </div>
             <div class="stat-card">
+                <div class="stat-icon">⏳</div>
                 <div class="stat-label">Pending</div>
                 <div class="stat-value"><?php echo $pending; ?></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-label">Success Rate</div>
+                <div class="stat-value"><?php echo $total > 0 ? round(($completed / $total) * 100) : 0; ?>%</div>
+            </div>
+        </div>
+
+        <div class="weekly-section">
+            <h3>Weekly Progress Tracker</h3>
+            <div class="weekly-grid">
+                <div class="day-checkbox">
+                    <input type="checkbox" id="mon" onchange="updateProgress()">
+                    <label for="mon" class="day-label">Mon</label>
+                </div>
+                <div class="day-checkbox">
+                    <input type="checkbox" id="tue" onchange="updateProgress()">
+                    <label for="tue" class="day-label">Tue</label>
+                </div>
+                <div class="day-checkbox">
+                    <input type="checkbox" id="wed" onchange="updateProgress()">
+                    <label for="wed" class="day-label">Wed</label>
+                </div>
+                <div class="day-checkbox">
+                    <input type="checkbox" id="thu" onchange="updateProgress()">
+                    <label for="thu" class="day-label">Thu</label>
+                </div>
+                <div class="day-checkbox">
+                    <input type="checkbox" id="fri" onchange="updateProgress()">
+                    <label for="fri" class="day-label">Fri</label>
+                </div>
+                <div class="day-checkbox">
+                    <input type="checkbox" id="sat" onchange="updateProgress()">
+                    <label for="sat" class="day-label">Sat</label>
+                </div>
+                <div class="day-checkbox">
+                    <input type="checkbox" id="sun" onchange="updateProgress()">
+                    <label for="sun" class="day-label">Sun</label>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="weeklyProgress"></div>
+                </div>
+                <div class="progress-text" id="weeklyProgressText">Weekly Progress: 0/7 days</div>
             </div>
         </div>
 
         <div class="task-input-section">
-            <h3>Add New Task</h3>
+            <h3>Create New Task</h3>
             <form method="POST">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Task Name</label>
-                        <input type="text" name="task" placeholder="Enter task name" required>
+                        <label>Task Description</label>
+                        <input type="text" name="task" placeholder="Enter detailed task description" required>
                     </div>
                     <div class="form-group">
-                        <label>Priority</label>
+                        <label>Priority Level</label>
                         <select name="priority" required>
                             <option value="">Select Priority</option>
                             <option value="Low">Low</option>
-                            <option value="Medium" selected>Medium</option>
+                            <option value="Medium">Medium</option>
                             <option value="High">High</option>
                         </select>
                     </div>
@@ -450,23 +765,23 @@ $pending = $total - $completed;
                         <label>Due Date</label>
                         <input type="date" name="due_date" required>
                     </div>
-                    <button type="submit" name="add" class="btn-add">Add</button>
+                    <button type="submit" name="add" class="btn-add">Create Task</button>
                 </div>
             </form>
         </div>
 
         <div class="content-grid">
             <div class="tasks-section">
-                <div class="section-header">Tasks</div>
+                <div class="section-header">Task Management</div>
                 <?php if ($total == 0): ?>
                 <div class="empty-state">
-                    <p>No tasks yet. Create one to get started!</p>
+                    <p>No tasks found. Start by creating your first task above!</p>
                 </div>
                 <?php else: ?>
                 <table class="tasks-table">
                     <thead>
                         <tr>
-                            <th>Task Name</th>
+                            <th>Task</th>
                             <th>Priority</th>
                             <th>Due Date</th>
                             <th>Status</th>
@@ -477,9 +792,10 @@ $pending = $total - $completed;
                         <?php foreach($tasks_data as $row): 
                             $priority_class = 'priority-' . $row['priority'];
                             $status_class = $row['status'] ? 'status-done' : 'status-pending';
-                            $status_text = $row['status'] ? 'Done' : 'Pending';
+                            $status_text = $row['status'] ? '✅ Done' : '⏳ Pending';
+                            $row_class = $row['status'] ? 'completed' : '';
                         ?>
-                        <tr>
+                        <tr class="<?php echo $row_class; ?>">
                             <td><?php echo htmlspecialchars($row['task_name']); ?></td>
                             <td>
                                 <span class="priority-badge <?php echo $priority_class; ?>">
@@ -495,9 +811,9 @@ $pending = $total - $completed;
                             <td>
                                 <div class="action-buttons">
                                     <?php if(!$row['status']): ?>
-                                    <a href="?complete=<?php echo $row['id']; ?>" class="btn-action" title="Complete">✓</a>
+                                    <a href="?complete=<?php echo $row['id']; ?>" class="btn-action" title="Mark Complete">✓ Complete</a>
                                     <?php endif; ?>
-                                    <a href="?delete=<?php echo $row['id']; ?>" class="btn-action" title="Delete" onclick="return confirm('Delete this task?')">✕</a>
+                                    <a href="?delete=<?php echo $row['id']; ?>" class="btn-action" title="Delete Task" onclick="return confirm('Are you sure you want to delete this task?')">🗑️ Delete</a>
                                 </div>
                             </td>
                         </tr>
@@ -507,16 +823,49 @@ $pending = $total - $completed;
                 <?php endif; ?>
             </div>
 
-            <div class="chart-section">
-                <div class="chart-title">Task Overview</div>
+            <div class="analytics-section">
+                <div class="chart-title">Performance Analytics</div>
                 <div class="chart-container">
                     <canvas id="taskChart"></canvas>
+                </div>
+                <div class="analytics-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="progress-text">Completion Rate: <?php echo $total > 0 ? round(($completed / $total) * 100) : 0; ?>%</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Load weekly progress from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            days.forEach(day => {
+                const checked = localStorage.getItem('weekly-' + day) === 'true';
+                document.getElementById(day).checked = checked;
+            });
+            updateProgress();
+        });
+
+        function updateProgress() {
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            let checkedCount = 0;
+            days.forEach(day => {
+                const checkbox = document.getElementById(day);
+                if (checkbox.checked) {
+                    checkedCount++;
+                    localStorage.setItem('weekly-' + day, 'true');
+                } else {
+                    localStorage.setItem('weekly-' + day, 'false');
+                }
+            });
+            const progress = (checkedCount / 7) * 100;
+            document.getElementById('weeklyProgress').style.width = progress + '%';
+            document.getElementById('weeklyProgressText').textContent = 'Weekly Progress: ' + checkedCount + '/7 days';
+        }
+
         const ctx = document.getElementById('taskChart').getContext('2d');
         const taskChart = new Chart(ctx, {
             type: 'doughnut',
@@ -526,10 +875,11 @@ $pending = $total - $completed;
                     data: [<?php echo $completed; ?>, <?php echo $pending; ?>],
                     backgroundColor: [
                         '#22c55e',
-                        '#8b5cf6'
+                        '#a855f7'
                     ],
-                    borderColor: '#1e293b',
-                    borderWidth: 2
+                    borderColor: 'rgba(30, 41, 59, 0.8)',
+                    borderWidth: 4,
+                    hoverBorderWidth: 6
                 }]
             },
             options: {
@@ -540,12 +890,17 @@ $pending = $total - $completed;
                         position: 'bottom',
                         labels: {
                             color: '#e2e8f0',
-                            padding: 20,
+                            padding: 30,
                             font: {
-                                size: 14
+                                size: 18,
+                                weight: '700'
                             }
                         }
                     }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
                 }
             }
         });
